@@ -92,7 +92,7 @@ int TBitField::operator==(const TBitField &bf) const // сравнение
 {
   if (MemLen != bf.MemLen) { return 0; }
   else {
-    for (int i = 0; i < MemLen; i++) { if (pMem[i] != bf.pMem[i]) { return 0; } }
+    for (int i = 0; i < BitLen; i++) { if (GetBit(i) != bf.GetBit(i)) { return 0; } }
     return 1;
   }
 }

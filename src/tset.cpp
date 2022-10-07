@@ -12,7 +12,7 @@ static const int FAKE_INT = -1;
 static TBitField FAKE_BITFIELD(1);
 static TSet FAKE_SET(1);
 
-TSet::TSet(int mp) : BitField(int(mp / (8 * 4)) + 1)
+TSet::TSet(int mp) : BitField((mp >> 5) + 1)
 {
   MaxPower = mp;
 }
@@ -25,7 +25,7 @@ TSet::TSet(const TSet &s) : BitField(s.BitField.GetLength() + 1)
 }
 
 // конструктор преобразования типа
-TSet::TSet(const TBitField &bf) : BitField(bf.GetLength() / (8 * 4))
+TSet::TSet(const TBitField &bf) : BitField(bf.GetLength() >> 5)
 {
   MaxPower = bf.GetLength();
   BitField = TBitField(bf);
@@ -81,41 +81,42 @@ int TSet::operator!=(const TSet &s) const // сравнение
 
 TSet TSet::operator+(const TSet &s) // объединение
 {
-  if (GetMaxPower() != s.GetMaxPower()) { throw "Wrong TSet operator input"; }
-  TSet t(*this);
-  t.BitField = t.BitField | s.BitField;
-  return t;
+  TSet Result(*this);
+  Result.MaxPower = max(GetMaxPower(), s.GetMaxPower());
+  Result.BitField = Result.BitField | s.BitField;
+  return Result;
 }
 
 TSet TSet::operator+(const int Elem) // объединение с элементом
 {
   if (Elem >= MaxPower) { throw "Wrong TSet operator input"; }
-  TSet t(*this);
-  t.BitField.SetBit(Elem);
-  return t;
+  TSet Result(*this);
+  Result.BitField.SetBit(Elem);
+  return Result;
 }
 
 TSet TSet::operator-(const int Elem) // разность с элементом
 {
   if (Elem >= MaxPower) { throw "Wrong TSet operator input"; }
-  TSet t(*this);
-  t.BitField.ClrBit(Elem);
-  return t;
+  TSet Result(*this);
+  Result.BitField.ClrBit(Elem);
+  return Result;
 }
 
 TSet TSet::operator*(const TSet &s) // пересечение
 {
-  if (GetMaxPower() != s.GetMaxPower()) { throw "Wrong TSet operator input"; }
-  TSet t(*this);
-  t.BitField = t.BitField & s.BitField;
-  return t;
+  TSet Result(*this);
+  Result.MaxPower = min(GetMaxPower(), s.GetMaxPower());
+  Result.BitField = Result.BitField & s.BitField;
+  return Result;
 }
 
 TSet TSet::operator~(void) // дополнение
 {
-  TSet t(*this);
-  t.BitField = ~t.BitField;
-  return t;
+  TSet Result(*this);
+  Result.BitField = ~Result.BitField;
+  for (int i = Result.MaxPower; i < Result.BitField.GetLength(); i++) { Result.BitField.ClrBit(i); }
+  return Result;
 }
 
 // перегрузка ввода/вывода
